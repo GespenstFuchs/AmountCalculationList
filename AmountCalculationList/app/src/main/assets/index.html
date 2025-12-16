@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>金額計算リスト</title>
+
+    <style>
+        /* 基本設定 */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: sans-serif;
+            background: #F7F3FF;
+            overflow: hidden;
+        }
+
+        /* safe-area（アクションバー・ステータスバー領域） */
+        .safe-top,
+        .safe-bottom {
+            position: fixed;
+            left: 0;
+            right: 0;
+            z-index: 1000; /* 常に最前面に表示する。 */
+        }
+
+        .safe-top {
+            top: 0;
+            height: env(safe-area-inset-top); /* safe-areaの高さ（上）を取得・設定する。 */
+            background: #000;
+        }
+
+        .safe-bottom {
+            bottom: 0;
+            height: env(safe-area-inset-bottom); /* safe-areaの高さ（下）を取得・設定する。 */
+            background: #333;
+        }
+
+        /* アプリ本体 */
+        .app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px) 14px;
+            box-sizing: border-box;
+            font-size: 18px;
+        }
+
+        /* 合計ラベル */
+        .total {
+            position: relative; /* 相対配置 */
+            font-size: 28px;
+            font-weight: bold;
+            color: #6840D8;
+            padding: 12px 18px;
+            border-radius: 22px; /* 角を丸める。 */
+            background: #F6F0FF;
+            border: 3px solid #D9C9FF;
+            width: fit-content; /* コンテンツ幅に合わせてサイズ調整する。 */
+            margin-bottom: 18px;
+            /* 外側の影＋内側の白い光 */
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.20), /* 外側の影（ふわっと浮かせる。） */
+            inset 0 0 14px rgba(255, 255, 255, 0.95); /* 内側の白い光（柔らかさを追加する。） */
+            animation: floatTotal 4s ease-in-out infinite; /* 上下に揺れるアニメーション */
+            transition: 0.25s; /* 変化を滑らかにする。 */
+        }
+
+        /* 合計ラベルの揺れアニメーション */
+        @keyframes floatTotal {
+
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* 金額 */
+        .total .amount {
+            font-weight: bold;
+        }
+
+        /* リスト */
+        .list {
+            flex: 1;
+            overflow-y: auto;
+            background: #E7DCFF;
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 14px;
+            border: 3px solid #BFA7FF;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.18);
+        }
+
+        /* リスト項目 */
+        .item {
+            display: grid;
+            grid-template-columns: 46px 1fr;
+            grid-template-rows: auto auto;
+            background: #FFFFFF;
+            padding: 18px;
+            margin-bottom: 22px;
+            border-radius: 32px; /* 雲の丸み */
+            border: 3px solid #EADFFF; /* ふわっとした雲のふち */
+            /* ふわふわした影（外側＋内側） */
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18), /* 外側の影 */
+            inset 0 0 22px rgba(255, 255, 255, 0.95); /* 内側の白い光 */
+            /* 浮遊アニメーション */
+            animation: floatCloud 4s ease-in-out infinite;
+            transition: 0.25s;
+        }
+
+        /* 雲が揺れるアニメーション */
+        @keyframes floatCloud {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* 項目選択時（雲が少し縮まる＋紫の雲影） */
+        .item.selected {
+            background: #F4EEFF;
+            transform: scale(0.965); /* 少し紫がかった雲に変化させる。 */
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30), inset 0 0 22px rgba(214, 196, 255, 0.95), 0 0 0 4px #D8C8FF inset;
+        }
+
+        /* 項目追加時アニメーション */
+        @keyframes popIn {
+            0% {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .added {
+            animation: popIn 0.35s ease-out;
+        }
+
+        /* 項目保存時アニメーション */
+        @keyframes savedShine {
+            0% {
+                box-shadow: 0 0 0 rgba(255,255,255,0);
+            }
+
+            50% {
+                box-shadow: 0 0 18px rgba(180,140,255,0.9);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(255,255,255,0);
+            }
+        }
+
+        .saved {
+            animation: savedShine 0.5s ease;
+        }
+
+        /* 項目削除時アニメーション */
+        @keyframes puff {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.4);
+            }
+        }
+
+        .puff {
+            animation: puff 0.35s ease-out forwards;
+        }
+
+        /* チェックボックス */
+        .star-check {
+            grid-row: 1 / span 2; /* グリッドの縦方向で２行分を占有する。 */
+            align-self: center;
+            justify-self: center;
+            appearance: none; /* ブラウザ標準のチェックボックス表示を無効化する。 */
+            font-size: 32px;
+            cursor: pointer; /* ホバー時にカーソルをポインタに変更する。 */
+            color: #C8BAFF;
+            transition: transform 0.3s ease, /* 回転や拡大縮小を滑らかに変化させる。 */
+            color 0.2s; /* 色の変化も滑らかにする。 */
+        }
+
+            /* 未チェック時 */
+            .star-check::before {
+                content: "✗";
+                opacity: 0.45;
+            }
+
+            /* チェック時 */
+            .star-check:checked::before {
+                content: "✓";
+                color: #7A4FFF;
+                opacity: 1;
+            }
+
+        /* チェック時の回転アニメーション（ＯＮ） */
+        @keyframes rotateOn {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.35);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        /* チェック時の回転アニメーション（ＯＦＦ） */
+        @keyframes rotateOff {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(-180deg) scale(1.35);
+            }
+
+            100% {
+                transform: rotate(-360deg) scale(1);
+            }
+        }
+
+        .rotate-on {
+            animation: rotateOn 0.45s ease;
+        }
+
+        .rotate-off {
+            animation: rotateOff 0.45s ease;
+        }
+
+        /* 項目テキスト */
+        .line1 {
+            margin-left: 10px;
+            font-weight: bold;
+            color: #6840D8;
+        }
+
+            .line1 .yen {
+                margin-left: 10px;
+                font-weight: bold;
+            }
+
+        .line2 {
+            margin-left: 10px;
+            margin-top: 4px;
+            font-size: 17px;
+            color: #6840D8;
+            font-weight: bold;
+            min-height: 1.4em; /* 空行でも高さを確保する。 */
+        }
+
+        /* ０件表示 */
+        .empty {
+            text-align: center;
+            margin-top: 150px;
+            font-size: 20px;
+            color: #8B6BFF;
+            font-weight: bold;
+            opacity: 0.85;
+            animation: floatText 5s ease-in-out infinite;
+        }
+
+        @keyframes floatText {
+            0%,100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 入力部 */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+            .input-row label {
+                white-space: nowrap;
+                font-weight: bold;
+                color: #6840D8;
+            }
+
+            .input-row input {
+                flex: 1;
+                padding: 10px;
+                font-size: 18px;
+                background: #FFFFFF;
+                border: 2px solid #BFA7FF;
+                border-radius: 12px;
+                box-shadow: 3px 3px 0 #E3D6FF;
+                transition: 0.2s ease;
+            }
+
+                .input-row input:focus {
+                    border-color: #7447FF;
+                    box-shadow: 6px 6px 0 #CBB8FF, /* テキストボックスに影を設定する。 */
+                    0 0 8px rgba(150, 120, 255, 0.5);
+                }
+
+            .input-row .yen-input {
+                flex: 1;
+            }
+
+            .input-row .minus-btn {
+                width: 48px;
+                padding: 8px 0;
+                text-align: center;
+            }
+
+        /* ボタン群 */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        button {
+            padding: 10px 22px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #6840D8;
+            background: #FFF;
+            border: 2px solid #CBB8FF;
+            border-radius: 20px;
+            /* 影を２種類重ねて、立体的にする。 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18), /* 外側に薄いドロップシャドウ */
+            inset 0 0 8px rgba(255, 255, 255, 0.9); /* 内側に白い光を入れて、立体的にする。    */
+            /* 変化を0.15秒で行い、滑らかにする。 */
+            transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+        }
+
+            /* 有効な場合、ホバーさせる。 */
+            button:not(:disabled):hover {
+                transform: translateY(-2px); /* ホバー時に少し浮き上がらせる。 */
+                background: #FDFBFF;
+            }
+
+            /* 有効な場合、アクティブにする。 */
+            button:not(:disabled):active {
+                transform: translateY(3px);
+            }
+
+            /* 無効状態 */
+            button:disabled {
+                opacity: 0.45; /* 半透明にして無効状態を表現する。 */
+                box-shadow: none; /* 影を消し、立体感を失くす。 */
+                transform: none; /* 位置変化を無効にする。 */
+                cursor: default;
+            }
+    </style>
+</head>
+
+<body>
+    <div class="safe-top"></div>
+    <div class="safe-bottom"></div>
+
+    <div class="app">
+
+        <div class="total">合計： <span id="totalAmount">¥0</span></div>
+
+        <div id="list" class="list"></div>
+
+        <div class="input-row">
+            <label for="date">日付：</label>
+            <input id="date">
+        </div>
+
+        <div class="input-row">
+            <label for="yen">金額：</label>
+            <input id="yen" class="yen-input" inputmode="numeric">
+            <button class="minus-btn" onclick="toggleMinus()">－</button>
+        </div>
+
+        <div class="input-row">
+            <label for="memo">メモ：</label>
+            <input id="memo">
+        </div>
+
+        <div class="buttons">
+            <button onclick="addItem()">新規追加</button>
+            <button id="deleteButton" onclick="deleteItems()" disabled>削除</button>
+            <button id="saveButton" onclick="saveItem()" disabled>保存</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * キー
+         */
+        const KEY = "AMOUNT_CALCULATION_LIST";
+
+        /**
+         * 日付要素
+         */
+        const dateInput = document.getElementById("date");
+
+        /**
+         * 金額要素
+         */
+        const yenInput = document.getElementById("yen");
+
+        /**
+         * メモ要素
+         */
+        const memoInput = document.getElementById("memo");
+
+        /**
+         * 削除ボタン
+         */
+        const deleteButton = document.getElementById("deleteButton");
+
+        /**
+         * 保存ボタン
+         */
+        const saveButton = document.getElementById("saveButton");
+
+        // 日付テキスト
+        let DateText = "";
+
+        // 金額テキスト
+        let YenText = "";
+
+        // 選択位置
+        let SelectedIndex = -1;
+
+        // 各項目のチェック状態を保持する配列
+        let CheckedAr = [];
+
+        // データ読み込み処理
+        const loadData = () => (localStorage.getItem(KEY) || "").split("\n").filter(x => x !== "");
+
+        // データ保存処理
+        const saveData = list => localStorage.setItem(KEY, list.join("\n"));
+
+        /**
+         * 本日日付設定処理
+         */
+        function setToday() {
+            const today = new Date();
+            date.value = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, "0")}/${String(today.getDate()).padStart(2, "0")}`;
+        }
+
+        /**
+         * ボタンの有効・無効設定処理
+         */
+        function setDisabledButtons() {
+            deleteButton.disabled = !CheckedAr.some(value => value);
+            saveButton.disabled = SelectedIndex === -1;
+        }
+
+        /**
+         * 画面描画処理
+         */
+        function render(addedIndex = -1, savedIndex = -1, initFlg = false) {
+            // リスト表示領域を取得・保持し、クリアする。
+            const listDiv = document.getElementById("list");
+            listDiv.innerHTML = "";
+
+            let total = 0;
+
+            // 保存済みのデータを読み込む。
+            const rows = loadData();
+
+            // 初期化フラグを判定する。
+            if (initFlg) {
+                // 【未チェック】で初期化する。
+                CheckedAr = new Array(rows.length).fill(false);
+            }
+
+            // 項目数を判定する。
+            if (rows.length === 0) {
+                // ０件の場合
+                const empty = document.createElement("div");
+                empty.className = "empty";
+                empty.innerHTML = `
+            <div style="font-size:26px;">🦊</div>
+            <div>まだ無いよ</div>
+            <div style="font-size:14px; opacity:0.8;">新規追加ボタンで追加</div>
+`;
+                listDiv.appendChild(empty);
+            }
+
+            // 各行を処理する。
+            rows.forEach((row, index) => {
+                // 各値を分解し、保持する。
+                const [dateStr, yenStr, memoStr] = row.split(",", 3);
+                const yenNum = parseInt(yenStr, 10) || 0;
+                total += yenNum;
+
+                // 項目を取得し、スタイルを設定する。
+                const item = document.createElement("div");
+                item.className = "item";
+
+                // 選択
+                if (index === SelectedIndex) {
+                    item.classList.add("selected");
+                }
+
+                // 追加
+                if (index === addedIndex) {
+                    item.classList.add("added");
+                    item.addEventListener("animationend", () => {
+                        item.classList.remove("added");
+                    }, { once: true });
+                }
+
+                // 保存
+                if (index === savedIndex) {
+                    item.classList.add("saved");
+                    item.addEventListener("animationend", () => {
+                        item.classList.remove("saved");
+                    }, { once: true });
+                }
+
+                // チェックボックスを設定する。
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.className = "star-check";
+                cb.checked = CheckedAr[index];
+
+                // チェックボックス押下処理
+                cb.onclick = e => {
+                    // 親要素のクリック処理を止める。
+                    e.stopPropagation();
+
+                    // チェックの有無を判定し、アニメーションを実行する。
+                    if (cb.checked) {
+                        cb.classList.remove("rotate-off");
+                        void cb.offsetWidth;    // 強制的に再描画させ、確実にアニメーションを動かすようにする。
+                        cb.classList.add("rotate-on");
+                    } else {
+                        cb.classList.remove("rotate-on");
+                        void cb.offsetWidth;    // 強制的に再描画させ、確実にアニメーションを動かすようにする。
+                        cb.classList.add("rotate-off");
+                    }
+
+                    // チェック状態を保持し、ボタンの有効・無効設定処理を呼び出す。
+                    CheckedAr[index] = cb.checked;
+                    setDisabledButtons();
+                };
+
+                // 項目にチェックボックスを追加する。
+                item.appendChild(cb);
+
+                // １行目
+                const l1 = document.createElement("div");
+                l1.className = "line1";
+
+                // 日付
+                const sp1 = document.createElement("span");
+                sp1.textContent = dateStr;
+
+                // 金額
+                const sp2 = document.createElement("span");
+                sp2.className = "yen";
+                sp2.textContent = yenNum < 0 ? `￥-${Math.abs(yenNum).toLocaleString()}` : `￥${yenNum.toLocaleString()}`;
+                sp2.style.color = yenNum < 0 ? "red" : "#6840D8";
+
+                // １行目に日付・金額を追加する。
+                l1.appendChild(sp1);
+                l1.appendChild(sp2);
+
+                // ２行目
+                // メモ
+                const l2 = document.createElement("div");
+                l2.className = "line2";
+                l2.textContent = memoStr || "";
+
+                // 項目に１行目・２行目を追加する。
+                item.appendChild(l1);
+                item.appendChild(l2);
+
+                // 項目押下処理
+                item.onclick = () => {
+                    // 各値を保持する。
+                    SelectedIndex = index;
+                    date.value = dateStr;
+                    yen.value = yenStr;
+                    memo.value = memoStr;
+
+                    // 画面を再描画し、ボタンの有効・無効設定処理を呼び出す。
+                    render();
+                    setDisabledButtons();
+                };
+
+                // リストに項目を追加する。
+                listDiv.appendChild(item);
+            });
+
+            // 合計金額表示領域を更新する。
+            totalAmount.textContent = `¥${total.toLocaleString()}`;
+            totalAmount.style.color = total < 0 ? "red" : "#6840D8";
+
+            // ボタンの有効・無効設定処理を呼び出す。
+            setDisabledButtons();
+        }
+
+        /**
+         * チェック処理
+         */
+        function valueCheck(dateText, yenText) {
+            // 日付未入力チェック
+            if (dateText.trim() === "") {
+                Android.showError("日付が未入力");
+                return false;
+            }
+
+            // 桁数チェック
+            if (dateText.trim().length > 10) {
+                Android.showError("日付は１０桁まで入力可能");
+                return false;
+            }
+
+            // 半角数値・スラッシュのみチェック
+            if (!/^[0-9/]+$/.test(dateText.trim())) {
+                Android.showError("日付は半角数値・/のみ入力可能");
+                return false;
+            }
+
+            let checkValue = yenText.trim();
+
+            // 金額未入力チェック
+            if (checkValue === "") {
+                Android.showError("金額が未入力");
+                return false;
+            }
+
+            // ハイフンの位置チェック
+            let index = checkValue.indexOf("-");
+            if (index !== -1 && index !== 0) {
+                Android.showError("-の位置が不正");
+                return false;
+            }
+
+            // ハイフン・半角数値のみチェック
+            if (!/^-?\d+$/.test(checkValue.trim())) {
+                Android.showError("金額は-・半角数値のみ入力可能");
+                return false;
+            }
+
+            // 値を保持する。
+            DateText = dateText.trim();
+            YenText = checkValue;
+
+            // カンマチェック
+            if (memo.value.indexOf(",") !== -1) {
+                Android.showError("メモに,は入力不可");
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * 項目追加処理
+         */
+        function addItem() {
+            if (valueCheck(date.value, yen.value)) {
+                // リストを読み込み、入力項目を先頭に追加する。
+                const list = loadData();
+                list.unshift(`${DateText},${YenText},${memo.value}`);
+                saveData(list);
+
+                // 新規項目は、未チェックとして保持する。
+                CheckedAr.unshift(false);
+
+                // 選択位置を判定する。
+                if (SelectedIndex !== -1) {
+                    // 項目が選択されている場合、項目が先頭に追加されるので、選択位置もインクリメントする。
+                    SelectedIndex += 1;
+                }
+
+                // 再描画する。
+                render(0);
+
+                // 各値を設定する。
+                setToday();
+                yen.value = "";
+                memo.value = "";
+
+                // トーストを表示する。
+                Android.showToast("新規追加しました。");
+            }
+        }
+
+        /**
+         * 項目削除処理
+         */
+        function deleteItems() {
+            const rows = loadData();
+            const items = document.querySelectorAll(".item");
+
+            // チェックフラグを設定する。
+            // （ディープコピーする。）
+            let checkedFlg = structuredClone(CheckedAr[SelectedIndex]);
+
+            let nextSelectedIndex = -1;
+
+            // 全項目に処理を行う。
+            items.forEach((item, index) => {
+                // チェックの有無を判定する。
+                if (CheckedAr[index]) {
+                    // チェックされている場合
+
+                    // 削除アニメーションを設定する。
+                    item.classList.add("puff");
+                } else {
+                    // チェックされていない場合
+
+                    // 現在の選択位置までインクリメントを行い、削除後の選択位置を設定する。
+                    if (index <= SelectedIndex) {
+                        nextSelectedIndex += 1
+                    }
+                }
+            });
+
+            // アニメーションが完了したら、リストを再生成させるため、待機してから処理を行う。
+            setTimeout(() => {
+                // チェックされていない項目で、新しい配列を生成する。
+                const newRows = [];
+                const newCheckedAr = [];
+                rows.forEach((row, index) => {
+                    if (!CheckedAr[index]) {
+                        newRows.push(row);
+                        newCheckedAr.push(false);
+                    }
+                });
+
+                // データ保存処理を呼び出し、チェック配列を更新する。
+                saveData(newRows);
+                CheckedAr = newCheckedAr;
+
+                // チェックフラグを判定する。
+                if (checkedFlg) {
+                    // チェックされている場合
+                    SelectedIndex = -1;
+                } else {
+                    // チェックされていない場合
+                    SelectedIndex = nextSelectedIndex;
+                }
+
+                // 再描画する。
+                render();
+
+                // トーストを表示する。
+                Android.showToast("削除しました。");
+            }, 350);
+        }
+
+        /**
+         * 項目保存処理
+         */
+        function saveItem() {
+            if (valueCheck(date.value, yen.value)) {
+                // リストを読み込み、選択項目を更新する。
+                const list = loadData();
+                list[SelectedIndex] = `${date.value},${yen.value},${memo.value}`;
+                saveData(list);
+
+                // 再描画する。
+                render(-1, SelectedIndex);
+
+                // トーストを表示する。
+                Android.showToast("保存しました。");
+            }
+        }
+
+        /**
+         * ハイフン切り替え処理
+         */
+        const toggleMinus = () => {
+            yen.value = yen.value.startsWith("-") ? yen.value.substring(1) : "-" + yen.value;
+        };
+
+        // 初期化処理：本日日付を設定し、リストを描画する。
+        setToday();
+        render(-1, -1, true);
+    </script>
+</body>
+</html>
