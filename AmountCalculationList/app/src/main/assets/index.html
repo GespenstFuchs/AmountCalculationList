@@ -91,7 +91,7 @@
             border-radius: 18px;
             padding: 14px;
             margin-bottom: 14px;
-            border: 3px solid #BFA7FF;
+            border: 4px solid #BFA7FF;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.18);
         }
 
@@ -101,8 +101,8 @@
             grid-template-columns: 46px 1fr;
             grid-template-rows: auto auto;
             background: #FFFFFF;
-            padding: 18px;
-            margin-bottom: 22px;
+            padding: 14px; /* 項目の高さ */
+            margin-bottom: 22px; /* 項目間の隙間 */
             border-radius: 32px; /* 雲の丸み */
             border: 3px solid #EADFFF; /* ふわっとした雲のふち */
             /* ふわふわした影（外側＋内側） */
@@ -305,7 +305,7 @@
             }
 
             .input-row input {
-                flex: 1;
+                flex: 1 1 auto;
                 padding: 10px;
                 font-size: 18px;
                 background: #FFFFFF;
@@ -313,6 +313,7 @@
                 border-radius: 12px;
                 box-shadow: 3px 3px 0 #E3D6FF;
                 transition: 0.2s ease;
+                min-width: 0;
             }
 
                 .input-row input:focus {
@@ -325,10 +326,13 @@
                 flex: 1;
             }
 
-            .input-row .minus-btn {
-                width: 48px;
-                padding: 8px 0;
+            .input-row .minus-button {
+                width: 64px;
+                min-width: 64px;
+                flex-shrink: 0; /* サイズを固定する。 */
+                padding: 8px 10px;
                 text-align: center;
+                font-size: 20px;
             }
 
         /* ボタン群 */
@@ -393,7 +397,7 @@
         <div class="input-row">
             <label for="yen">金額：</label>
             <input id="yen" class="yen-input" inputmode="numeric">
-            <button class="minus-btn" onclick="toggleMinus()">－</button>
+            <button class="minus-button" onclick="toggleMinus()">－</button>
         </div>
 
         <div class="input-row">
@@ -498,9 +502,10 @@
                 const empty = document.createElement("div");
                 empty.className = "empty";
                 empty.innerHTML = `
-            <div style="font-size:26px;">🦊</div>
-            <div>まだ無いよ</div>
-            <div style="font-size:14px; opacity:0.8;">新規追加ボタンで追加</div>
+                <div onclick="addItem()">
+                    <div style="font-size:26px;">🦊</div>
+                    <div>👻まだ無いよ👻</div>
+                </div>
 `;
                 listDiv.appendChild(empty);
             }
@@ -638,7 +643,7 @@
 
             // 半角数値・スラッシュのみチェック
             if (!/^[0-9/]+$/.test(dateText.trim())) {
-                Android.showError("日付は半角数値・/のみ入力可能");
+                Android.showError("日付は【半角数値】・【/】のみ入力可能");
                 return false;
             }
 
@@ -653,13 +658,13 @@
             // ハイフンの位置チェック
             let index = checkValue.indexOf("-");
             if (index !== -1 && index !== 0) {
-                Android.showError("-の位置が不正");
+                Android.showError("【-】の位置が不正");
                 return false;
             }
 
             // ハイフン・半角数値のみチェック
             if (!/^-?\d+$/.test(checkValue.trim())) {
-                Android.showError("金額は-・半角数値のみ入力可能");
+                Android.showError("金額は【-】・【半角数値】のみ入力可能");
                 return false;
             }
 
@@ -669,7 +674,7 @@
 
             // カンマチェック
             if (memo.value.indexOf(",") !== -1) {
-                Android.showError("メモに,は入力不可");
+                Android.showError("メモに【,】は入力不可");
                 return false;
             }
 
