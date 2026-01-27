@@ -85,6 +85,9 @@ function render(
         CheckedAr = new Array<boolean>(rows.length).fill(false);
     }
 
+    // フラグメントを生成する。
+    const fragment = document.createDocumentFragment();
+
     if (rows.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty";
@@ -94,7 +97,7 @@ function render(
                 <div>👻まだ無いよ👻</div>
             </div>
         `;
-        listDiv.appendChild(empty);
+        fragment.appendChild(empty);
     }
 
     rows.forEach((row: string, index: number) => {
@@ -166,8 +169,11 @@ function render(
             setDisabledButtons();
         };
 
-        listDiv.appendChild(item);
+        fragment.appendChild(item);
     });
+
+    // フラグメントを追加する。
+    listDiv.appendChild(fragment);
 
     totalAmount.textContent = `¥${total.toLocaleString()}`;
     totalAmount.style.color = total < 0 ? "red" : "#6840D8";
