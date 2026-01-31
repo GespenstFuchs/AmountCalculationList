@@ -3,7 +3,7 @@
     showError(message: string): void;
 };
 
-// グローバルに関数を公開する。（minifyした際に削除されないようにする。）
+// 関数を公開する。
 (window as any).toggleMinus = toggleMinus;
 (window as any).addItem = addItem;
 (window as any).deleteItems = deleteItems;
@@ -35,17 +35,12 @@ let CheckedAr: boolean[] = [];
 /**
  * データ読み込み処理
  */
-const loadData = (): string[] =>
-    (localStorage.getItem(KEY) || "")
-        .split("\n")
-        .filter(x => x !== "");
+const loadData = (): string[] => (localStorage.getItem(KEY) || "").split("\n").filter(x => x !== "");
 
 /**
  * データ保存処理
  */
-const saveData = (list: string[]): void => {
-    localStorage.setItem(KEY, list.join("\n"));
-};
+const saveData = (list: string[]): void => localStorage.setItem(KEY, list.join("\n"));
 
 /**
  * 本日日付設定処理
@@ -74,7 +69,6 @@ function render(
     savedIndex: number = -1,
     initFlg: boolean = false
 ): void {
-
     const listDiv = document.getElementById("list") as HTMLDivElement;
     listDiv.innerHTML = "";
 
@@ -145,10 +139,9 @@ function render(
 
         const sp2 = document.createElement("span");
         sp2.className = "yen";
-        sp2.textContent =
-            yenNum < 0
-                ? `￥-${Math.abs(yenNum).toLocaleString()}`
-                : `￥${yenNum.toLocaleString()}`;
+        sp2.textContent = yenNum < 0
+            ? `￥-${Math.abs(yenNum).toLocaleString()}`
+            : `￥${yenNum.toLocaleString()}`;
         sp2.style.color = yenNum < 0 ? "red" : "#6840D8";
 
         l1.append(sp1, sp2);

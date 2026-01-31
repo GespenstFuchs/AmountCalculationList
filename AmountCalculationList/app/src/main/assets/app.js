@@ -1,6 +1,6 @@
 window.toggleMinus=W;window.addItem=O;window.deleteItems=Y;window.saveItem=U;var B="AMOUNT_CALCULATION_LIST",g=document.getElementById("date"),a=document.getElementById("yen"),h=document.getElementById("memo"),x=document.getElementById("deleteButton"),F=document.getElementById("saveButton"),k=document.getElementById("totalAmount"),$="",C="",o=-1,l=[],w=()=>(localStorage.getItem(B)||"").split(`
-`).filter(e=>e!==""),b=e=>{localStorage.setItem(B,e.join(`
-`))};function D(){let e=new Date;g.value=`${e.getFullYear()}/${String(e.getMonth()+1).padStart(2,"0")}/${String(e.getDate()).padStart(2,"0")}`}function L(){x.disabled=!l.some(e=>e),F.disabled=o===-1}function p(e=-1,m=-1,d=!1){let r=document.getElementById("list");r.innerHTML="";let i=0,s=w();d&&(l=new Array(s.length).fill(!1));let v=document.createDocumentFragment();if(s.length===0){let c=document.createElement("div");c.className="empty",c.innerHTML=`
+`).filter(e=>e!==""),b=e=>localStorage.setItem(B,e.join(`
+`));function D(){let e=new Date;g.value=`${e.getFullYear()}/${String(e.getMonth()+1).padStart(2,"0")}/${String(e.getDate()).padStart(2,"0")}`}function L(){x.disabled=!l.some(e=>e),F.disabled=o===-1}function p(e=-1,m=-1,d=!1){let r=document.getElementById("list");r.innerHTML="";let i=0,s=w();d&&(l=new Array(s.length).fill(!1));let v=document.createDocumentFragment();if(s.length===0){let c=document.createElement("div");c.className="empty",c.innerHTML=`
             <div onclick="addItem()">
                 <div style="font-size:26px;">\u{1F98A}</div>
                 <div>\u{1F47B}\u307E\u3060\u7121\u3044\u3088\u{1F47B}</div>
