@@ -17,12 +17,14 @@ body {
 .safe-top {
     top: 0;
     height: env(safe-area-inset-top);
-    background: #000;
+    border-radius: 0 0 20px 20px;
+    background: color-mix(in srgb, #7A4FFF 85%, transparent);
 }
 .safe-bottom {
     bottom: 0;
     height: env(safe-area-inset-bottom);
-    background: #333;
+    border-radius: 20px 20px 0 0;
+    background: color-mix(in srgb, #7A4FFF 85%, transparent);
 }
 .app {
     height: 100%;
