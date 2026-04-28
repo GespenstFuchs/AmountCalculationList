@@ -1,41 +1,84 @@
-﻿declare const Android: {
-    showToast(message: string): void;
-    showError(message: string): void;
+/* ===============================
+   型定義
+================================ */
+// Androidインターフェース
+declare const Android: {
+    getSafeAreaInsets(): string;
 };
 
-// 関数を公開する。
-(window as any).toggleMinus = toggleMinus;
-(window as any).addItem = addItem;
-(window as any).deleteItems = deleteItems;
-(window as any).saveItem = saveItem;
-
-/**
- * キー
- */
-const KEY: string = "AMOUNT_CALCULATION_LIST";
-
-/**
- * DOM要素
- */
+/* ===============================
+   項目定義
+================================ */
+const listDiv = document.getElementById("list") as HTMLDivElement;
 const dateInput = document.getElementById("date") as HTMLInputElement;
 const yenInput = document.getElementById("yen") as HTMLInputElement;
 const memoInput = document.getElementById("memo") as HTMLInputElement;
 const deleteButton = document.getElementById("deleteButton") as HTMLButtonElement;
 const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
 const totalAmount = document.getElementById("totalAmount") as HTMLSpanElement;
+const customToastElement = document.getElementById("customToast") as HTMLDivElement;
 
-/**
- * 状態管理
- */
+/* ===============================
+   定数定義
+================================ */
+// キー
+const KEY: string = "AMOUNT_CALCULATION_LIST";
+
+/* ===============================
+   変数定義
+================================ */
+// 状態管理
 let DateText: string = "";
 let YenText: string = "";
 let SelectedIndex: number = -1;
 let CheckedAr: boolean[] = [];
+let previousTotal: number | null = null;
+let toastTimeout: number | null = null;
+
+/**
+ * カスタムトースト表示処理
+ * @param message メッセージ
+ */
+function showCustomToast(message: string): void {
+    if (customToastElement) {
+        // 既存のタイマーがあればクリアする。
+        if (toastTimeout) clearTimeout(toastTimeout);
+
+        // アニメーションを再起動するために一度クラスを外す。
+        customToastElement.classList.remove("show");
+        void customToastElement.offsetWidth; // リフロー強制
+
+        // textContentを使用することで、改行コードを安全に解釈させる。
+        customToastElement.textContent = message;
+
+        // クラスを付けて表示する。
+        customToastElement.classList.add("scroll", "show");
+
+        // ２秒後にフェードアウトさせる。
+        toastTimeout = window.setTimeout(() => {
+            customToastElement.classList.remove("show");
+        }, 2000);
+    }
+}
+
+/**
+ * セーフエリア再計算処理
+ */
+function refreshSafeArea(): void {
+    const jsonStr = Android.getSafeAreaInsets();
+    if (jsonStr && jsonStr !== "{}") {
+        // インセットを取得し、CSS変数を更新する。
+        const insets = JSON.parse(jsonStr);
+        const doc = document.documentElement;
+        doc.style.setProperty('--safe-top', `${insets.top}px`);
+        doc.style.setProperty('--safe-bottom', `${insets.bottom}px`);
+    }
+}
 
 /**
  * データ読み込み処理
  */
-const loadData = (): string[] => (localStorage.getItem(KEY) || "").split("\n").filter(x => x !== "");
+const loadData = (): string[] => (localStorage.getItem(KEY) || "").split("\n").filter(item => item !== "");
 
 /**
  * データ保存処理
@@ -57,19 +100,21 @@ function setToday(): void {
  * ボタンの有効・無効制御処理
  */
 function setDisabledButtons(): void {
-    deleteButton.disabled = !CheckedAr.some(v => v);
+    deleteButton.disabled = !CheckedAr.some(check => check);
     saveButton.disabled = SelectedIndex === -1;
 }
 
 /**
  * 画面描画処理
+ * @param [addedIndex=-1] 追加された項目位置
+ * @param [savedIndex=-1] 保存された項目位置
+ * @param [initFlg=false] 初期表示フラグ
  */
 function render(
     addedIndex: number = -1,
     savedIndex: number = -1,
     initFlg: boolean = false
 ): void {
-    const listDiv = document.getElementById("list") as HTMLDivElement;
     listDiv.innerHTML = "";
 
     let total: number = 0;
@@ -82,6 +127,7 @@ function render(
     // フラグメントを生成する。
     const fragment = document.createDocumentFragment();
 
+    // 項目が存在しない場合は、空項目を設定する。
     if (rows.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty";
@@ -94,6 +140,7 @@ function render(
         fragment.appendChild(empty);
     }
 
+    // データを元に項目を生成する。
     rows.forEach((row: string, index: number) => {
         const [dateStr, yenStr, memoStr] = row.split(",", 3);
         const yenNum: number = Number(yenStr ?? 0);
@@ -101,6 +148,17 @@ function render(
 
         const item = document.createElement("div");
         item.className = "item";
+
+        // 初期表示時は時間差でふわっと表示させるアニメーション
+        if (initFlg) {
+            item.classList.add("stagger-in");
+            item.style.animationDelay = `${index * 0.05}s`;
+            // アニメーション完了後にクラスを外して、通常の浮遊アニメーションに移行させる。
+            setTimeout(() => {
+                item.classList.remove("stagger-in");
+                item.style.animationDelay = "";
+            }, index * 50 + 400);
+        }
 
         if (index === SelectedIndex) item.classList.add("selected");
         if (index === addedIndex) {
@@ -171,49 +229,59 @@ function render(
     totalAmount.textContent = `¥${total.toLocaleString()}`;
     totalAmount.style.color = total < 0 ? "red" : "#6840D8";
 
+    if (previousTotal !== null && previousTotal !== total) {
+        // 合計金額のアニメーションを再起動するために一度クラスを外す。
+        totalAmount.classList.remove("pop-total");
+        void totalAmount.offsetWidth;
+        totalAmount.classList.add("pop-total");
+    }
+    previousTotal = total;
+
     setDisabledButtons();
 }
 
 /**
  * 入力チェック処理
+ * @param dateText 日付テキスト
+ * @param yenText 金額テキスト
+ * @return チェック結果
  */
 function valueCheck(dateText: string, yenText: string): boolean {
-
     if (dateText.trim() === "") {
-        Android.showError("日付が未入力");
+        showCustomToast("日付が未入力です ❌");
         return false;
     }
 
     if (dateText.trim().length > 10) {
-        Android.showError("日付は１０桁まで入力可能");
+        showCustomToast("日付は１０桁までです ❌");
         return false;
     }
 
     if (!/^[0-9/]+$/.test(dateText.trim())) {
-        Android.showError("日付は【半角数値】・【/】のみ入力可能");
+        showCustomToast("日付は【半角数値】・【/】のみです ❌");
         return false;
     }
 
     const checkValue = yenText.trim();
 
     if (checkValue === "") {
-        Android.showError("金額が未入力");
+        showCustomToast("金額が未入力です ❌");
         return false;
     }
 
     const idx = checkValue.indexOf("-");
     if (idx !== -1 && idx !== 0) {
-        Android.showError("【-】の位置が不正");
+        showCustomToast("【-】の位置が不正です ❌");
         return false;
     }
 
     if (!/^-?\d+$/.test(checkValue)) {
-        Android.showError("金額は【-】・【半角数値】のみ入力可能");
+        showCustomToast("金額は【-】・【半角数値】のみです ❌");
         return false;
     }
 
     if (memoInput.value.includes(",")) {
-        Android.showError("メモに【,】は入力不可");
+        showCustomToast("メモに【,】は入力不可です ❌");
         return false;
     }
 
@@ -240,14 +308,13 @@ function addItem(): void {
     yenInput.value = "";
     memoInput.value = "";
 
-    Android.showToast("新規追加しました。");
+    showCustomToast("新規追加しました ✨");
 }
 
 /**
  * 項目削除処理
  */
 function deleteItems(): void {
-
     const rows = loadData();
     const items = document.querySelectorAll<HTMLDivElement>(".item");
 
@@ -278,7 +345,7 @@ function deleteItems(): void {
         SelectedIndex = checkedFlg ? -1 : nextSelectedIndex;
 
         render();
-        Android.showToast("削除しました。");
+        showCustomToast("削除しました 🗑️");
     }, 350);
 }
 
@@ -293,7 +360,7 @@ function saveItem(): void {
     saveData(list);
 
     render(-1, SelectedIndex);
-    Android.showToast("保存しました。");
+    showCustomToast("保存しました 💾");
 }
 
 /**
@@ -305,8 +372,32 @@ function toggleMinus(): void {
         : "-" + yenInput.value;
 };
 
-/**
- * 初期化処理
- */
-setToday();
-render(-1, -1, true);
+// 関数を公開する。
+(window as any).toggleMinus = toggleMinus;
+(window as any).addItem = addItem;
+(window as any).deleteItems = deleteItems;
+(window as any).saveItem = saveItem;
+
+// ===========================================
+// ページ読み込み完了後初期化処理
+// ===========================================
+document.addEventListener("DOMContentLoaded", async () => {
+    setToday();
+    render(-1, -1, true);
+
+    // 描画完了後に表示する。
+    document.body.classList.remove("preload");
+
+    // セーフエリアを再計算させる。
+    requestAnimationFrame(() => refreshSafeArea());
+});
+
+// ===========================================
+// ページ読み込み完了後初期化処理
+// ===========================================
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        // セーフエリアを再計算させる。
+        requestAnimationFrame(() => refreshSafeArea());
+    }
+});

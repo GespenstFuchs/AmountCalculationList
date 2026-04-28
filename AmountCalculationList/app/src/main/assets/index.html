@@ -8,11 +8,10 @@
     <link rel="stylesheet" href="style.min.css">
 </head>
 
-<body>
-    <div class="safe-top"></div>
-    <div class="safe-bottom"></div>
-
+<body class="preload">
     <div class="app">
+        <div class="safe-top"></div>
+
         <div class="total">合計： <span id="totalAmount">¥0</span></div>
         <div id="list" class="list"></div>
         <div class="input-row">
@@ -33,6 +32,10 @@
             <button id="deleteButton" onclick="deleteItems()" disabled>削除</button>
             <button id="saveButton" onclick="saveItem()" disabled>保存</button>
         </div>
+
+        <div id="customToast"></div>
+
+        <div class="safe-bottom"></div>
     </div>
 </body>
 </html>

@@ -7,6 +7,7 @@ body {
     overflow: hidden;
     user-select: none;
 }
+
 .safe-top,
 .safe-bottom {
     position: fixed;
@@ -14,18 +15,21 @@ body {
     right: 0;
     z-index: 1000;
 }
+
 .safe-top {
     top: 0;
     height: env(safe-area-inset-top);
     border-radius: 0 0 20px 20px;
     background: color-mix(in srgb, #7A4FFF 85%, transparent);
 }
+
 .safe-bottom {
     bottom: 0;
     height: env(safe-area-inset-bottom);
     border-radius: 20px 20px 0 0;
     background: color-mix(in srgb, #7A4FFF 85%, transparent);
 }
+
 .app {
     height: 100%;
     display: flex;
@@ -34,6 +38,7 @@ body {
     box-sizing: border-box;
     font-size: 18px;
 }
+
 .total {
     position: relative;
     font-size: 28px;
@@ -49,24 +54,26 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 18px;
-    box-shadow:
-        0 6px 14px rgba(0, 0, 0, 0.20),
-        inset 0 0 14px rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.20), inset 0 0 14px rgba(255, 255, 255, 0.95);
     animation: floatTotal 4s ease-in-out infinite;
     transition: 0.25s;
 }
+
+#totalAmount {
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+
 @keyframes floatTotal {
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-6px);
     }
 }
-.total .amount {
-    font-weight: bold;
-}
+
 .list {
     flex: 1;
     overflow-y: auto;
@@ -77,6 +84,7 @@ body {
     border: 4px solid #BFA7FF;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.18);
 }
+
 .item {
     display: grid;
     grid-template-columns: 46px 1fr;
@@ -86,65 +94,77 @@ body {
     margin-bottom: 22px;
     border-radius: 32px;
     border: 3px solid #EADFFF;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18),
-        inset 0 0 22px rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18), inset 0 0 22px rgba(255, 255, 255, 0.95);
     animation: floatCloud 4s ease-in-out infinite;
     transition: 0.25s;
 }
+
 @keyframes floatCloud {
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-6px);
     }
 }
+
 .item.selected {
     background: #F4EEFF;
     transform: scale(0.965);
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30), inset 0 0 22px rgba(214, 196, 255, 0.95), 0 0 0 4px #D8C8FF inset;
 }
+
 @keyframes popIn {
     0% {
         transform: scale(0.4);
         opacity: 0;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
     }
 }
+
 .added {
     animation: popIn 0.35s ease-out;
 }
+
 @keyframes savedShine {
     0% {
         box-shadow: 0 0 0 rgba(255, 255, 255, 0);
     }
+
     50% {
         box-shadow: 0 0 18px rgba(180, 140, 255, 0.9);
     }
+
     100% {
         box-shadow: 0 0 0 rgba(255, 255, 255, 0);
     }
 }
+
 .saved {
     animation: savedShine 0.5s ease;
 }
+
 @keyframes puff {
     0% {
         opacity: 1;
         transform: scale(1);
     }
+
     100% {
         opacity: 0;
         transform: scale(0.4);
     }
 }
+
 .puff {
     animation: puff 0.35s ease-out forwards;
 }
+
 .star-check {
     grid-row: 1 / span 2;
     align-self: center;
@@ -153,47 +173,57 @@ body {
     font-size: 32px;
     cursor: pointer;
     color: #C8BAFF;
-    transition: transform 0.3s ease,
-        color 0.2s;
+    transition: transform 0.3s ease, color 0.2s;
     -webkit-tap-highlight-color: transparent;
 }
-.star-check::before {
-    content: "✗";
-    opacity: 0.45;
-}
-.star-check:checked::before {
-    content: "✓";
-    color: #7A4FFF;
-    opacity: 1;
-}
+
+    .star-check::before {
+        content: "✗";
+        opacity: 0.45;
+    }
+
+    .star-check:checked::before {
+        content: "✓";
+        color: #7A4FFF;
+        opacity: 1;
+    }
+
 @keyframes rotateOn {
     0% {
         transform: rotate(0deg) scale(1);
     }
+
     50% {
         transform: rotate(180deg) scale(1.35);
     }
+
     100% {
         transform: rotate(360deg) scale(1);
     }
 }
+
 @keyframes rotateOff {
     0% {
         transform: rotate(0deg) scale(1);
     }
+
     50% {
         transform: rotate(-180deg) scale(1.35);
     }
+
     100% {
         transform: rotate(-360deg) scale(1);
     }
 }
+
 .rotate-on {
     animation: rotateOn 0.45s ease;
 }
+
 .rotate-off {
     animation: rotateOff 0.45s ease;
 }
+
 .line1 {
     margin-left: 10px;
     font-weight: bold;
@@ -203,10 +233,12 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.line1 .yen {
-    margin-left: 10px;
-    font-weight: bold;
-}
+
+    .line1 .yen {
+        margin-left: 10px;
+        font-weight: bold;
+    }
+
 .line2 {
     margin-left: 10px;
     margin-top: 4px;
@@ -219,6 +251,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .empty {
     text-align: center;
     margin-top: 150px;
@@ -228,61 +261,69 @@ body {
     opacity: 0.85;
     animation: floatText 5s ease-in-out infinite;
 }
+
 @keyframes floatText {
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-10px);
     }
 }
+
 .input-row {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-top: 10px;
 }
-.input-row label {
-    white-space: nowrap;
-    font-weight: bold;
-    color: #6840D8;
-}
-.input-row input {
-    flex: 1 1 auto;
-    padding: 10px;
-    font-size: 18px;
-    background: #FFFFFF;
-    border: 2px solid #BFA7FF;
-    border-radius: 12px;
-    box-shadow: 3px 3px 0 #E3D6FF;
-    transition: 0.2s ease;
-    min-width: 0;
-    color: #6840D8;
-}
-.input-row input:focus {
-    outline: none;
-    border-color: #7447FF;
-    box-shadow: 6px 6px 0 #CBB8FF,
-        0 0 8px rgba(150, 120, 255, 0.5);
-}
-.input-row .yen-input {
-    flex: 1;
-}
-.input-row .minus-button {
-    width: 64px;
-    min-width: 64px;
-    flex-shrink: 0;
-    padding: 8px 10px;
-    text-align: center;
-    font-size: 20px;
-}
+
+    .input-row label {
+        white-space: nowrap;
+        font-weight: bold;
+        color: #6840D8;
+    }
+
+    .input-row input {
+        flex: 1 1 auto;
+        padding: 10px;
+        font-size: 18px;
+        background: #FFFFFF;
+        border: 2px solid #BFA7FF;
+        border-radius: 12px;
+        box-shadow: 3px 3px 0 #E3D6FF;
+        transition: 0.2s ease;
+        min-width: 0;
+        color: #6840D8;
+    }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #7447FF;
+            box-shadow: 6px 6px 0 #CBB8FF, 0 0 8px rgba(150, 120, 255, 0.5);
+        }
+
+    .input-row .yen-input {
+        flex: 1;
+    }
+
+    .input-row .minus-button {
+        width: 64px;
+        min-width: 64px;
+        flex-shrink: 0;
+        padding: 8px 10px;
+        text-align: center;
+        font-size: 20px;
+    }
+
 .buttons {
     display: flex;
     justify-content: center;
     gap: 18px;
     margin-top: 16px;
 }
+
 button {
     padding: 10px 22px;
     font-size: 18px;
@@ -291,20 +332,114 @@ button {
     background: #FFF;
     border: 2px solid #CBB8FF;
     border-radius: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18),
-        inset 0 0 8px rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18), inset 0 0 8px rgba(255, 255, 255, 0.9);
     transition: transform 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
-button:not(:disabled):hover {
-    transform: translateY(-2px);
-    background: #FDFBFF;
+
+    button:not(:disabled):hover {
+        transform: translateY(-2px);
+        background: #FDFBFF;
+    }
+
+    button:not(:disabled):active {
+        transform: translateY(3px);
+    }
+
+    button:disabled {
+        opacity: 0.45;
+        box-shadow: none;
+        transform: none;
+        cursor: default;
+    }
+
+/* =========================================
+   アニメーション・トースト追記分
+========================================= */
+/* 初期表示のスタッガー（順次）アニメーション */
+@keyframes staggerIn {
+    0% {
+        transform: scale(0.6) translateY(30px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
-button:not(:disabled):active {
-    transform: translateY(3px);
+
+.stagger-in {
+    animation: staggerIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-button:disabled {
-    opacity: 0.45;
-    box-shadow: none;
-    transform: none;
-    cursor: default;
+
+/* 合計金額変動時のポップアニメーション */
+@keyframes popTotal {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+        color: #AB47BC;
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
+
+.pop-total {
+    animation: popTotal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* カスタムトースト */
+#customToast {
+    position: absolute;
+    bottom: 30%;    /* トーストの垂直位置 */
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 14px 28px;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 3000;
+    white-space: pre;
+    text-align: center;
+    width: max-content;
+    max-width: 90vw;
+    line-height: 1.5;
+}
+
+    #customToast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* 巻物 */
+    #customToast.scroll {
+        background: #E7DCFF;
+        color: #6840D8;
+        border-top: 3px solid #8D6E63;
+        border-bottom: 3px solid #8D6E63;
+        padding: 10px 45px;
+    }
+
+        #customToast.scroll::before, #customToast.scroll::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            bottom: -5px;
+            width: 12px;
+            background: #5D4037;
+            border-radius: 3px;
+        }
+
+        #customToast.scroll::before {
+            left: -6px;
+        }
+
+        #customToast.scroll::after {
+            right: -6px;
+        }
