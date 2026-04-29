@@ -329,7 +329,7 @@ button {
     font-size: 18px;
     font-weight: bold;
     color: #6840D8;
-    background: #FFF;
+    background: #F3EDFF;
     border: 2px solid #CBB8FF;
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18), inset 0 0 8px rgba(255, 255, 255, 0.9);
@@ -395,7 +395,7 @@ button {
 /* カスタムトースト */
 #customToast {
     position: absolute;
-    bottom: 30%;    /* トーストの垂直位置 */
+    bottom: 12%;    /* トーストの垂直位置 */
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     padding: 14px 28px;
