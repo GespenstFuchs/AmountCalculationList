@@ -1,3 +1,6 @@
+/* =========================================
+   ベーススタイル
+========================================= */
 html,
 body {
     height: 100%;
@@ -8,12 +11,26 @@ body {
     user-select: none;
 }
 
+/* =========================================
+   アプリ全体のレイアウト・セーフエリア
+========================================= */
+.app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px) 14px;
+    box-sizing: border-box;
+    font-size: 18px;
+}
+
+/* ノッチ（画面の切り欠き）やホームバーを避けるための領域 */
 .safe-top,
 .safe-bottom {
     position: fixed;
     left: 0;
     right: 0;
     z-index: 1000;
+    pointer-events: none; /* タッチ操作を邪魔しないようにする。 */
 }
 
 .safe-top {
@@ -28,15 +45,6 @@ body {
     height: env(safe-area-inset-bottom);
     border-radius: 20px 20px 0 0;
     background: color-mix(in srgb, #7A4FFF 85%, transparent);
-}
-
-.app {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px) 14px;
-    box-sizing: border-box;
-    font-size: 18px;
 }
 
 .total {
@@ -317,6 +325,7 @@ body {
         font-size: 20px;
     }
 
+/* ボタンを並べるコンテナ */
 .buttons {
     display: flex;
     justify-content: center;
@@ -324,7 +333,9 @@ body {
     margin-top: 16px;
 }
 
+/* 共通ボタンデザイン */
 button {
+    flex: 1;
     padding: 10px 22px;
     font-size: 18px;
     font-weight: bold;
@@ -352,6 +363,10 @@ button {
         cursor: default;
     }
 
+.minus-button {
+    /* スタイルをリセットする。 */
+    flex: unset;
+}
 /* =========================================
    アニメーション・トースト追記分
 ========================================= */
