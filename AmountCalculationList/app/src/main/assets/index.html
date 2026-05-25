@@ -21,18 +21,18 @@
         <div class="input-row">
             <label for="yen">金額：</label>
             <input id="yen" class="yen-input" inputmode="numeric">
-            <button class="minus-button" onclick="toggleMinus()">－</button>
+            <button id="toggleMinusButton" class="minus-button">－</button>
         </div>
         <div class="input-row">
             <label for="memo">メモ：</label>
             <input id="memo">
         </div>
         <div class="buttons">
-            <button onclick="addItem()">📝 追加</button>
-            <button id="saveButton" onclick="saveItem()" disabled>️💾 保存</button>
+            <button id="addButton">📝 追加</button>
+            <button id="saveButton" disabled>️💾 保存</button>
         </div>
         <div class="buttons">
-            <button id="deleteButton" onclick="deleteItems()" disabled>🗑️ 削除</button>
+            <button id="deleteButton" disabled>🗑️ 削除</button>
         </div>
 
         <div id="customToast"></div>

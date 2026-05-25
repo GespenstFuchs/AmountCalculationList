@@ -9,14 +9,16 @@ declare const Android: {
 /* ===============================
    項目定義
 ================================ */
+const totalAmount = document.getElementById("totalAmount") as HTMLSpanElement;
 const listDiv = document.getElementById("list") as HTMLDivElement;
 const dateInput = document.getElementById("date") as HTMLInputElement;
 const yenInput = document.getElementById("yen") as HTMLInputElement;
+const toggleMinusButton = document.getElementById("toggleMinusButton") as HTMLButtonElement;
 const memoInput = document.getElementById("memo") as HTMLInputElement;
-const deleteButton = document.getElementById("deleteButton") as HTMLButtonElement;
+const addButton = document.getElementById("addButton") as HTMLButtonElement;
 const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
-const totalAmount = document.getElementById("totalAmount") as HTMLSpanElement;
-const customToastElement = document.getElementById("customToast") as HTMLDivElement;
+const deleteButton = document.getElementById("deleteButton") as HTMLButtonElement;
+const customToast = document.getElementById("customToast") as HTMLDivElement;
 
 /* ===============================
    定数定義
@@ -40,23 +42,23 @@ let toastTimeout: number | null = null;
  * @param message メッセージ
  */
 function showCustomToast(message: string): void {
-    if (customToastElement) {
+    if (customToast) {
         // 既存のタイマーがあればクリアする。
         if (toastTimeout) clearTimeout(toastTimeout);
 
         // アニメーションを再起動するために一度クラスを外す。
-        customToastElement.classList.remove("show");
-        void customToastElement.offsetWidth; // リフロー強制
+        customToast.classList.remove("show");
+        void customToast.offsetWidth; // リフロー強制
 
         // textContentを使用することで、改行コードを安全に解釈させる。
-        customToastElement.textContent = message;
+        customToast.textContent = message;
 
         // クラスを付けて表示する。
-        customToastElement.classList.add("scroll", "show");
+        customToast.classList.add("scroll", "show");
 
         // ２秒後にフェードアウトさせる。
         toastTimeout = window.setTimeout(() => {
-            customToastElement.classList.remove("show");
+            customToast.classList.remove("show");
         }, 2000);
     }
 }
@@ -372,11 +374,15 @@ function toggleMinus(): void {
         : "-" + yenInput.value;
 };
 
-// 関数を公開する。
-(window as any).toggleMinus = toggleMinus;
-(window as any).addItem = addItem;
-(window as any).deleteItems = deleteItems;
-(window as any).saveItem = saveItem;
+/**
+ * イベントリスナー設定処理
+ */
+function setEventListeners(): void {
+    toggleMinusButton.addEventListener("click", toggleMinus);
+    addButton.addEventListener("click", addItem);
+    saveButton.addEventListener("click", saveItem);
+    deleteButton.addEventListener("click", deleteItems);
+}
 
 // ===========================================
 // ページ読み込み完了後初期化処理
@@ -384,6 +390,9 @@ function toggleMinus(): void {
 document.addEventListener("DOMContentLoaded", async () => {
     setToday();
     render(-1, -1, true);
+
+    // イベントリスナー設定処理を呼び出す。
+    setEventListeners();
 
     // 描画完了後に表示する。
     document.body.classList.remove("preload");
