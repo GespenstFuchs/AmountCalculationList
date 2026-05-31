@@ -325,14 +325,6 @@ body {
         font-size: 20px;
     }
 
-/* ボタンを並べるコンテナ */
-.buttons {
-    display: flex;
-    justify-content: center;
-    gap: 18px;
-    margin-top: 16px;
-}
-
 /* 共通ボタンデザイン */
 button {
     flex: 1;
@@ -367,8 +359,9 @@ button {
     /* スタイルをリセットする。 */
     flex: unset;
 }
+
 /* =========================================
-   アニメーション・トースト追記分
+   トースト関連
 ========================================= */
 /* 初期表示のスタッガー（順次）アニメーション */
 @keyframes staggerIn {
@@ -407,7 +400,74 @@ button {
     animation: popTotal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* カスタムトースト */
+/* =========================================
+   アクションバー（横スクロール）
+========================================= */
+.action-bar-container {
+    margin-top: 16px;
+    width: 100%;
+}
+
+.action-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 14px;
+    padding: 10px 4px;
+    -ms-overflow-style: none; /* AndroidのWebViewでスクロールバーを非表示にしつつ、スクロール可能にする。 */
+    scrollbar-width: none;
+}
+
+    .action-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+/* アクションボタン（div要素をボタンとしてスタイリング） */
+.action-button {
+    flex: 1; /* 余裕がある場合、画面幅に合わせて均等に広がる。 */
+    min-width: 76px; /* 画面幅が狭い場合、縮みすぎるのを防ぐ（これ以下になると、スクロール発生） */
+    max-width: 120px; /* 横画面など画面が広すぎる場合、ボタンが巨大化するのを防ぐ。 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 76px;
+    height: 76px;
+    background: #F3EDFF;
+    border: 2px solid #CBB8FF;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18), inset 0 0 8px rgba(255, 255, 255, 0.9);
+    color: #6840D8;
+    cursor: pointer;
+    transition: transform 0.15s, background-color 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent; /* タップ時の青いハイライトを消す */
+}
+
+    .action-button .icon {
+        font-size: 26px;
+        margin-bottom: 4px;
+    }
+
+    .action-button .label {
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .action-button:not(.disabled):active {
+        transform: translateY(3px);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 0 8px rgba(255, 255, 255, 0.9);
+    }
+
+    /* 無効状態のスタイル */
+    .action-button.disabled {
+        opacity: 0.45;
+        box-shadow: none;
+        transform: none;
+        pointer-events: none; /* タップイベントを無効化にする。 */
+    }
+
+/* =========================================
+   カスタムトースト
+========================================= */
 #customToast {
     position: absolute;
     bottom: 12%;    /* トーストの垂直位置 */
@@ -458,3 +518,88 @@ button {
         #customToast.scroll::after {
             right: -6px;
         }
+
+/* =========================================
+   カスタム確認ダイアログ
+========================================= */
+.confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45); /* 背景を暗くし、すりガラスのようなブラー効果を設定する。 */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 4000; /* トーストより上に表示する。 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; /* デフォルトは、非表示にする。 */
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+    .confirm-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+.confirm-dialog {
+    background: #F7F3FF;
+    border: 4px solid #CBB8FF;
+    border-radius: 28px;
+    padding: 24px 20px;
+    width: 85%;
+    max-width: 320px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), inset 0 0 18px rgba(255, 255, 255, 0.95);
+    text-align: center;
+    transform: scale(0.85); /* ポップインアニメーション */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.confirm-overlay.show .confirm-dialog {
+    transform: scale(1);
+}
+
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    animation: floatCloud 3s ease-in-out infinite;
+}
+
+.confirm-message {
+    font-size: 16px;
+    color: #6840D8;
+    font-weight: bold;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    white-space: pre-wrap; /* \nを改行として解釈する。 */
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.confirm-button {
+    flex: 1;
+    padding: 12px 0;
+    font-size: 15px;
+    border-radius: 18px;
+}
+
+/* ＯＫボタン */
+.ok-button {
+    background: #FFF0F0;
+    border-color: #FFB4B4;
+    color: #E53935;
+}
+
+/* キャンセルボタン */
+.cancel-button {
+    background: #FFFFFF;
+    border-color: #D9C9FF;
+    color: #8B6BFF;
+    box-shadow: none;
+}

@@ -15,10 +15,20 @@ const dateInput = document.getElementById("date") as HTMLInputElement;
 const yenInput = document.getElementById("yen") as HTMLInputElement;
 const toggleMinusButton = document.getElementById("toggleMinusButton") as HTMLButtonElement;
 const memoInput = document.getElementById("memo") as HTMLInputElement;
-const addButton = document.getElementById("addButton") as HTMLButtonElement;
-const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
-const deleteButton = document.getElementById("deleteButton") as HTMLButtonElement;
+const addButton = document.getElementById("addButton") as HTMLDivElement;
+const saveButton = document.getElementById("saveButton") as HTMLDivElement;
+const deleteButton = document.getElementById("deleteButton") as HTMLDivElement;
+const clearButton = document.getElementById("clearButton") as HTMLDivElement;
+const allDeleteButton = document.getElementById("allDeleteButton") as HTMLDivElement;
+
+// カスタムトースト
 const customToast = document.getElementById("customToast") as HTMLDivElement;
+
+// カスタム確認ダイアログ
+const confirmOverlay = document.getElementById("customConfirmOverlay") as HTMLDivElement;
+const confirmMessage = document.getElementById("confirmMessage") as HTMLDivElement;
+const confirmOkButton = document.getElementById("confirmOkButton") as HTMLButtonElement;
+const confirmCancelButton = document.getElementById("confirmCancelButton") as HTMLButtonElement;
 
 /* ===============================
    定数定義
@@ -36,6 +46,30 @@ let SelectedIndex: number = -1;
 let CheckedAr: boolean[] = [];
 let previousTotal: number | null = null;
 let toastTimeout: number | null = null;
+
+// コールバック関数
+let confirmCallback: (() => void) | null = null;
+
+/**
+ * カスタム確認ダイアログ表示処理
+ * @param message 表示メッセージ
+ * @param okButtonLabel ＯＫボタンラベル
+ * @param onOkButtonClicked ＯＫボタン押下イベント（コールバック）
+ */
+function showConfirm(message: string, okButtonLabel: string, onOkButtonClicked: () => void): void {
+    confirmMessage.textContent = message;
+    confirmOkButton.textContent = okButtonLabel;
+    confirmCallback = onOkButtonClicked;
+    confirmOverlay.classList.add("show");
+}
+
+/**
+ * カスタム確認ダイアログ非表示処理
+ */
+function closeConfirm(): void {
+    confirmOverlay.classList.remove("show");
+    confirmCallback = null;
+}
 
 /**
  * カスタムトースト表示処理
@@ -102,8 +136,28 @@ function setToday(): void {
  * ボタンの有効・無効制御処理
  */
 function setDisabledButtons(): void {
-    deleteButton.disabled = !CheckedAr.some(check => check);
-    saveButton.disabled = SelectedIndex === -1;
+    const hasChecked = CheckedAr.some(check => check);
+
+    // 削除ボタン
+    if (hasChecked) {
+        deleteButton.classList.remove("disabled");
+    } else {
+        deleteButton.classList.add("disabled");
+    }
+
+    // 保存ボタン
+    if (SelectedIndex === -1) {
+        saveButton.classList.add("disabled");
+    } else {
+        saveButton.classList.remove("disabled");
+    }
+
+    // 全削除ボタン
+    if (loadData().length === 0) {
+        allDeleteButton.classList.add("disabled");
+    } else {
+        allDeleteButton.classList.remove("disabled");
+    }
 }
 
 /**
@@ -366,6 +420,35 @@ function saveItem(): void {
 }
 
 /**
+ * クリア処理
+ */
+function clear(): void {
+    // 値をクリアする。
+    setToday();
+    yenInput.value = "";
+    memoInput.value = "";
+
+    showCustomToast("クリアしました 🧹");
+}
+
+/**
+ * 全削除処理
+ */
+function deleteAllItems(): void {
+    // カスタム確認ダイアログを表示する。
+    showConfirm(
+        "全てのデータを削除してもよろしいですか？",
+        "全削除",
+        () => {
+            saveData([]);
+            CheckedAr = [];
+            SelectedIndex = -1;
+            render(-1, -1, true);
+            showCustomToast("全項目を削除しました 💣");
+    });
+}
+
+/**
  * マイナス切り替え処理
  */
 function toggleMinus(): void {
@@ -382,6 +465,15 @@ function setEventListeners(): void {
     addButton.addEventListener("click", addItem);
     saveButton.addEventListener("click", saveItem);
     deleteButton.addEventListener("click", deleteItems);
+    clearButton.addEventListener("click", clear);
+    allDeleteButton.addEventListener("click", deleteAllItems);
+    confirmOkButton.addEventListener("click", () => {
+        if (confirmCallback) {
+            confirmCallback();
+        }
+        closeConfirm();
+    });
+    confirmCancelButton.addEventListener("click", closeConfirm);
 }
 
 // ===========================================
