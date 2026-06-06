@@ -421,7 +421,7 @@ button {
         display: none;
     }
 
-/* アクションボタン（div要素をボタンとしてスタイリング） */
+/* アクションボタン */
 .action-button {
     flex: 1; /* 余裕がある場合、画面幅に合わせて均等に広がる。 */
     min-width: 76px; /* 画面幅が狭い場合、縮みすぎるのを防ぐ（これ以下になると、スクロール発生） */
@@ -463,6 +463,53 @@ button {
         box-shadow: none;
         transform: none;
         pointer-events: none; /* タップイベントを無効化にする。 */
+    }
+
+/* =========================================
+   メニュー
+========================================= */
+.popup-menu {
+    position: fixed;
+    left: 50%;
+    bottom: 110px;
+    transform: translateX(-50%) translateY(20px) scale(.9);
+    opacity: 0;
+    pointer-events: none;
+    background: #F7F3FF;
+    border: 3px solid #CBB8FF;
+    border-radius: 24px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    overflow: hidden;
+    transition: opacity .25s ease, transform .25s cubic-bezier(.175,.885,.32,1.275);
+    z-index: 3500;
+}
+
+    .popup-menu.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+.popup-menu-item {
+    padding: 18px 32px;
+    font-weight: bold;
+    color: #6840D8;
+    background: #F7F3FF;
+    white-space: nowrap;
+    transition: .15s;
+}
+
+    .popup-menu-item:not(.disabled):active {
+        background: #E7DCFF;
+    }
+
+    .popup-menu-item + .popup-menu-item {
+        border-top: 2px solid #D9C9FF;
+    }
+
+    .popup-menu-item.disabled {
+        opacity: .4;
+        pointer-events: none;
     }
 
 /* =========================================

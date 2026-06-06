@@ -19,7 +19,11 @@ const addButton = document.getElementById("addButton") as HTMLDivElement;
 const saveButton = document.getElementById("saveButton") as HTMLDivElement;
 const deleteButton = document.getElementById("deleteButton") as HTMLDivElement;
 const clearButton = document.getElementById("clearButton") as HTMLDivElement;
-const allDeleteButton = document.getElementById("allDeleteButton") as HTMLDivElement;
+
+// メニュー
+const deleteMenu = document.getElementById("deleteMenu") as HTMLDivElement;
+const selectDeleteItem = document.getElementById("selectDeleteItem") as HTMLDivElement;
+const allDeleteItem = document.getElementById("allDeleteItem") as HTMLDivElement;
 
 // カスタムトースト
 const customToast = document.getElementById("customToast") as HTMLDivElement;
@@ -133,17 +137,10 @@ function setToday(): void {
 }
 
 /**
- * ボタンの有効・無効制御処理
+ * コントロールの有効・無効制御処理
  */
-function setDisabledButtons(): void {
+function setDisabledControl(): void {
     const hasChecked = CheckedAr.some(check => check);
-
-    // 削除ボタン
-    if (hasChecked) {
-        deleteButton.classList.remove("disabled");
-    } else {
-        deleteButton.classList.add("disabled");
-    }
 
     // 保存ボタン
     if (SelectedIndex === -1) {
@@ -152,11 +149,18 @@ function setDisabledButtons(): void {
         saveButton.classList.remove("disabled");
     }
 
-    // 全削除ボタン
-    if (loadData().length === 0) {
-        allDeleteButton.classList.add("disabled");
+    // 選択削除メニュー
+    if (hasChecked) {
+        selectDeleteItem.classList.remove("disabled");
     } else {
-        allDeleteButton.classList.remove("disabled");
+        selectDeleteItem.classList.add("disabled");
+    }
+
+    // 全削除メニュー
+    if (loadData().length > 0) {
+        allDeleteItem.classList.remove("disabled");
+    } else {
+        allDeleteItem.classList.add("disabled");
     }
 }
 
@@ -227,6 +231,7 @@ function render(
             setTimeout(() => item.classList.remove("saved"), 500);
         }
 
+        // チェックボックスを生成する。
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.className = "star-check";
@@ -240,11 +245,12 @@ function render(
             cb.classList.add(cb.checked ? "rotate-on" : "rotate-off");
 
             CheckedAr[index] = cb.checked;
-            setDisabledButtons();
+            setDisabledControl();
         };
 
         item.appendChild(cb);
 
+        // 日付と金額を表示する行を生成する。
         const l1 = document.createElement("div");
         l1.className = "line1";
 
@@ -260,6 +266,7 @@ function render(
 
         l1.append(sp1, sp2);
 
+        // メモを表示する行を生成する。
         const l2 = document.createElement("div");
         l2.className = "line2";
         l2.textContent = memoStr || "";
@@ -273,7 +280,7 @@ function render(
             memoInput.value = memoStr ?? "";
 
             render();
-            setDisabledButtons();
+            setDisabledControl();
         };
 
         fragment.appendChild(item);
@@ -293,7 +300,7 @@ function render(
     }
     previousTotal = total;
 
-    setDisabledButtons();
+    setDisabledControl();
 }
 
 /**
@@ -350,8 +357,10 @@ function valueCheck(dateText: string, yenText: string): boolean {
  * 項目追加処理
  */
 function addItem(): void {
+    // 入力チェックを行う。
     if (!valueCheck(dateInput.value, yenInput.value)) return;
 
+    // データを保存する。
     const list = loadData();
     list.unshift(`${DateText},${YenText},${memoInput.value}`);
     saveData(list);
@@ -409,8 +418,10 @@ function deleteItems(): void {
  * 保存処理
  */
 function saveItem(): void {
+    // 入力チェックを行う。
     if (!valueCheck(dateInput.value, yenInput.value)) return;
 
+    // データを保存する。
     const list = loadData();
     list[SelectedIndex] = `${dateInput.value},${yenInput.value},${memoInput.value}`;
     saveData(list);
@@ -464,9 +475,16 @@ function setEventListeners(): void {
     toggleMinusButton.addEventListener("click", toggleMinus);
     addButton.addEventListener("click", addItem);
     saveButton.addEventListener("click", saveItem);
-    deleteButton.addEventListener("click", deleteItems);
+    deleteButton.addEventListener("click", () => {
+        if (deleteMenu.classList.contains("show")) {
+            deleteMenu.classList.remove("show");
+            return;
+        }
+
+        setDisabledControl();
+        deleteMenu.classList.add("show");
+    });
     clearButton.addEventListener("click", clear);
-    allDeleteButton.addEventListener("click", deleteAllItems);
     confirmOkButton.addEventListener("click", () => {
         if (confirmCallback) {
             confirmCallback();
@@ -474,6 +492,30 @@ function setEventListeners(): void {
         closeConfirm();
     });
     confirmCancelButton.addEventListener("click", closeConfirm);
+
+    // メニュー
+    selectDeleteItem.addEventListener("click", () => {
+        deleteMenu.classList.remove("show");
+        setTimeout(() => {
+            deleteItems();
+        }, 0);
+    });
+    allDeleteItem.addEventListener("click", () => {
+        deleteMenu.classList.remove("show");
+        setTimeout(() => {
+            deleteAllItems();
+        }, 0);
+    });
+
+    // ドキュメント
+    document.addEventListener("click", e => {
+        const target = e.target as HTMLElement;
+
+        // メニュー以外の場所がクリックされた場合、メニューを閉じる。
+        if (!deleteMenu.contains(target) && !deleteButton.contains(target)) {
+            deleteMenu.classList.remove("show");
+        }
+    });
 }
 
 // ===========================================
