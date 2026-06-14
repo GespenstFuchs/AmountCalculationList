@@ -410,11 +410,11 @@ button {
 
 .action-bar {
     display: flex;
-    overflow-x: auto;
     gap: 14px;
     padding: 10px 4px;
-    -ms-overflow-style: none; /* AndroidのWebViewでスクロールバーを非表示にしつつ、スクロール可能にする。 */
     scrollbar-width: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
     .action-bar::-webkit-scrollbar {
