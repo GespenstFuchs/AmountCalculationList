@@ -380,38 +380,59 @@ function addItem(): void {
  * 項目削除処理
  */
 function deleteItems(): void {
-    const rows = loadData();
-    const items = document.querySelectorAll<HTMLDivElement>(".item");
+    // 削除対象の件数を取得する。
+    const deleteCount = CheckedAr.filter(checked => checked).length;
 
-    const checkedFlg: boolean = !!CheckedAr[SelectedIndex];
-    let nextSelectedIndex = -1;
+    // 件数の数字を全角に変換する。
+    const fullWidthDeleteCount = String(deleteCount).replace(/[0-9]/g, digit =>
+        String.fromCharCode(digit.charCodeAt(0) + 0xFEE0)
+    );
 
-    items.forEach((item, index) => {
-        if (CheckedAr[index]) {
-            item.classList.add("puff");
-        } else if (index <= SelectedIndex) {
-            nextSelectedIndex++;
+    // 確認ダイアログを表示し、ＯＫが押された場合だけ削除する。
+    showConfirm(
+        `チェックした${fullWidthDeleteCount}件のデータを削除してもよろしいですか？`,
+        "選択削除",
+        () => {
+            const rows = loadData();
+            const items = document.querySelectorAll<HTMLDivElement>(".item");
+
+            // 確認時点の選択状態と選択項目を保持する。
+            // アニメーション中にチェック状態が変わっても削除対象が変わらないようにする。
+            const checkedSnapshot = [...CheckedAr];
+            const selectedIndexSnapshot = SelectedIndex;
+            const checkedFlg: boolean = !!checkedSnapshot[selectedIndexSnapshot];
+            let nextSelectedIndex = -1;
+
+            // 削除対象にアニメーションを設定する。
+            items.forEach((item, index) => {
+                if (checkedSnapshot[index]) {
+                    item.classList.add("puff");
+                } else if (index <= selectedIndexSnapshot) {
+                    nextSelectedIndex++;
+                }
+            });
+
+            // アニメーション完了後にデータを削除する。
+            setTimeout(() => {
+                const newRows: string[] = [];
+                const newChecked: boolean[] = [];
+
+                rows.forEach((row, index) => {
+                    if (!checkedSnapshot[index]) {
+                        newRows.push(row);
+                        newChecked.push(false);
+                    }
+                });
+
+                saveData(newRows);
+                CheckedAr = newChecked;
+                SelectedIndex = checkedFlg ? -1 : nextSelectedIndex;
+
+                render();
+                showCustomToast("削除しました 🗑️");
+            }, 350);
         }
-    });
-
-    setTimeout(() => {
-        const newRows: string[] = [];
-        const newChecked: boolean[] = [];
-
-        rows.forEach((row, index) => {
-            if (!CheckedAr[index]) {
-                newRows.push(row);
-                newChecked.push(false);
-            }
-        });
-
-        saveData(newRows);
-        CheckedAr = newChecked;
-        SelectedIndex = checkedFlg ? -1 : nextSelectedIndex;
-
-        render();
-        showCustomToast("削除しました 🗑️");
-    }, 350);
+    );
 }
 
 /**
